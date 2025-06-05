@@ -1,4 +1,6 @@
 import pygame
+import numpy
+import i18n
 import asyncio
 import pygame_gui
 from juliaSet import *
@@ -66,7 +68,7 @@ async def main():
 
     # Pregenerate Mandelbrot
     mandelbrot_surface = None
-    mandrelbrot_generated = False
+    mandelbrot_generated = False
 
 ## Mandelbrot ##
     def mandelbrot():

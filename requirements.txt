@@ -1,5 +1,5 @@
-numpy==2.2.2
+numpy==1.24.3
+python-i18n==0.3.9
 pygame-ce==2.5.4
 pygame_gui==0.6.13
-python-i18n==0.3.9
 pygbag==0.9.2
