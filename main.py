@@ -9,6 +9,38 @@ from perlionNoise import *
 from constants import *
 from ui import *
 
+def numpy_to_surface(array):
+    """Convert numpy array to pygame surface without surfarray - optimized"""
+    height, width = array.shape[:2]
+    
+    # Create surface
+    surface = pygame.Surface((width, height))
+    
+    if len(array.shape) == 3:
+        # RGB array - batch process for better performance
+        pixels = []
+        for y in range(height):
+            row = []
+            for x in range(width):
+                # Ensure values are in valid range and convert to int
+                color = tuple(min(255, max(0, int(array[y, x, i]))) for i in range(3))
+                row.append(color)
+            pixels.append(row)
+        
+        # Set all pixels
+        for y in range(height):
+            for x in range(width):
+                surface.set_at((x, y), pixels[y][x])
+    else:
+        # Grayscale array
+        for y in range(height):
+            for x in range(width):
+                val = min(255, max(0, int(array[y, x])))
+                color = (val, val, val)
+                surface.set_at((x, y), color)
+    
+    return surface
+
 async def main():   
     # Pygame initialization
     pygame.init()
@@ -31,6 +63,7 @@ async def main():
 
     # Cache julia sets to avoid recalc
     julia_cache = {}
+    last_julia_time = 0  # Throttling for Julia set updates
     
 
     # Cache Perlin Noise
@@ -47,23 +80,37 @@ async def main():
         offset_x, offset_y = 0.0, 0.0
         c = complex((mx / WIDTH) * 2 - 1, (my / HEIGHT) * 2 - 1)
 
-        # Create cache key
-        cache_key = (round(c.real, 3), round(c.imag, 3))
+        # Create cache key with lower precision for better caching
+        cache_key = (round(c.real, 1), round(c.imag, 1))  # Reduced precision from 3 to 1
         
-        # Only recalculate if parameters changed significantly
-        if cache_key not in julia_cache:
-            # Limit cache size
-            if len(julia_cache) > 50:
-                julia_cache.clear()
+        # Check if we have cached result
+        if cache_key in julia_cache:
+            surface = julia_cache[cache_key]
+            screen.blit(surface, (0, 0))
+            return
+        
+        # Limit cache size
+        if len(julia_cache) > 30:  # Reduced cache size
+            julia_cache.clear()
 
-        # Compute Julia set
-        julia_img = compute_julia(WIDTH, HEIGHT, zoom, offset_x, offset_y, c)
+        # Compute Julia set at MUCH lower resolution for speed
+        small_width = WIDTH // 4   # 200x200 instead of 800x800
+        small_height = HEIGHT // 4
+        
+        julia_img = compute_julia(small_width, small_height, zoom, offset_x, offset_y, c)
         
         # Convert to color-mapped RGB image
         colored_img = generate_colormap(julia_img)
         
-        # Convert to Pygame surface
-        surface = pygame.surfarray.make_surface(colored_img)
+        # Convert to small Pygame surface
+        small_surface = numpy_to_surface(colored_img)
+        
+        # Scale up the small surface (much faster than computing large fractal)
+        surface = pygame.transform.scale(small_surface, (WIDTH, HEIGHT))
+        
+        # Cache the scaled surface
+        julia_cache[cache_key] = surface
+        
         screen.blit(surface, (0, 0))
 
     # Pregenerate Mandelbrot
@@ -138,12 +185,15 @@ async def main():
                     if event.ui_element == button_1:
                         current_page = 1
                         hidePerlinNoiseUI(sliders, labels)
+                        print("Button 1 clicked - Julia Sets")
                     elif event.ui_element == button_2:
                         current_page = 2
                         showPerlinNoiseUI(sliders, labels)
+                        print("Button 2 clicked - Perlin Noise")
                     elif event.ui_element == button_3:
                         current_page = 3 
                         hidePerlinNoiseUI(sliders, labels)
+                        print("Button 3 clicked - Mandelbrot")
 
 
             # Track Mouse Motion for Julia Set 

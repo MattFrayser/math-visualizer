@@ -2,16 +2,21 @@ import pygame
 import numpy as np
 from constants import *
 
-J_MAX_ITER = 80  # Reduced from 100 for better performance
+# Test surfarray availability
+try:
+    import pygame.surfarray
+    SURFARRAY_AVAILABLE = True
+except ImportError:
+    SURFARRAY_AVAILABLE = False
+
+J_MAX_ITER = 30  # Reduced from 80 for much better performance
 
 # Function to compute Julia set
 def compute_julia(width, height, zoom, offset_x, offset_y, c):
-    # Use smaller resolution for web performance
-    actual_width = min(width, 400)
-    actual_height = min(height, 400)
+    # Already using smaller resolution - no need to reduce further
     
-    x = np.linspace(-zoom + offset_x, zoom + offset_x, actual_width)
-    y = np.linspace(-zoom + offset_y, zoom + offset_y, actual_height)
+    x = np.linspace(-zoom + offset_x, zoom + offset_x, width)
+    y = np.linspace(-zoom + offset_y, zoom + offset_y, height)
     X, Y = np.meshgrid(x, y)
     Z = X + 1j * Y
     
@@ -24,12 +29,6 @@ def compute_julia(width, height, zoom, offset_x, offset_y, c):
             break
         img[mask] = i
         Z[mask] = Z[mask]**2 + c
-    
-    # Scale up if needed
-    if actual_width != width or actual_height != height:
-        img = np.repeat(np.repeat(img, width//actual_width, axis=1), height//actual_height, axis=0)
-        # Trim to exact size if needed
-        img = img[:height, :width]
     
     return img
 
