@@ -1,20 +1,23 @@
 import pygame
 import numpy as np
-import noise
+import math
 
 # Generate Perlin noise terrain
 def generate_perlin_noise(width, height, scale, octaves, persistence, lacunarity):
     terrain = np.zeros((width, height))
-    for i in range(width):
-        for j in range(height):
-            terrain[i][j] = noise.pnoise2(i / scale, 
-                                          j / scale, 
-                                          octaves=octaves, 
-                                          persistence=persistence, 
-                                          lacunarity=lacunarity, 
-                                          repeatx=1024, 
-                                          repeaty=1024, 
-                                          base=0)
+     for i in range(width):
+            for j in range(height):
+                value = 0
+                amplitude = 1
+                frequency = 1 / scale
+                
+                for o in range(int(octaves)):
+                    value += amplitude * (math.sin(i * frequency) + math.cos(j * frequency)) / 2
+                    amplitude *= persistence
+                    frequency *= lacunarity
+                    
+                terrain[i][j] = value / 2  # Normalize
+
     return terrain
 
 # Convert 3D coordinates to 2D screen coordinates (isometric projection)
@@ -47,3 +50,13 @@ def render_terrain(screen, terrain, width, height, AMPLITUDE=100):
 
             # Draw the quad (two triangles)
             pygame.draw.polygon(screen, color, [(x1, y1), (x2, y2), (x3, y3), (x4, y4)])
+    for i in range(width):
+        for j in range(height):
+            terrain[i][j] = noise.pnoise2(i / scale, 
+                                          j / scale, 
+                                          octaves=octaves, 
+                                          persistence=persistence, 
+                                          lacunarity=lacunarity, 
+                                          repeatx=1024, 
+                                          repeaty=1024, 
+                                          base=0)
