@@ -32,7 +32,7 @@ jobs:
     
     - name: Build for web
       run: |
-        pygbag --app_name "Math Visualizer" --width 800 --height 800 .
+        pygbag --width 800 --height 800 -no_opt --html .
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
@@ -40,7 +40,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: './dist'
+        path: './build/web'
 
   deploy:
     environment:
