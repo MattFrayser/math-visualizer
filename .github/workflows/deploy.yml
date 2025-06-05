@@ -27,7 +27,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        pip install pygame-ce pygbag
+        pip install pygame-ce==2.5.4 pygbag==0.9.2
         pip install -r requirements.txt
     
     - name: Build for web
