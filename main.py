@@ -25,6 +25,7 @@ async def main():
 
 # Set page to 0
     current_page = 0
+    mx, my = 0, 0
 
 ## Julia Set ##
     def juliaSet():
@@ -65,6 +66,7 @@ async def main():
 
 
 # Main loop
+    clock  = pygame.time.Clock()
     while running:
         time_delta = pygame.time.Clock().tick(60) / 1000.0
         screen.fill("Black") # Temp fill color 
@@ -89,7 +91,8 @@ async def main():
                         current_page = 2
                         showPerlinNoiseUI(sliders, labels)
                     elif event.ui_element == button_3:
-                        current_page = 3 hidePerlinNoiseUI(sliders, labels)
+                        current_page = 3 
+                        hidePerlinNoiseUI(sliders, labels)
             # Track Mouse Motion for Julia Set 
             if event.type == pygame.MOUSEMOTION and current_page == 1:
                 mx, my = event.pos
@@ -119,5 +122,5 @@ async def main():
     pygame.quit()
 
 
-if __name__ = "__main__": 
+if __name__ == "__main__": 
     asyncio.run(main())
