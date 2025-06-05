@@ -32,7 +32,7 @@ jobs:
     
     - name: Build for web
       run: |
-        pygbag --name "Math Visualizer" --width 800 --height 800 .
+        pygbag --app_name "Math Visualizer" --width 800 --height 800 .
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
