@@ -1,14 +1,14 @@
 import pygame
 import numpy as np
 
-MAX_ITER = 80  # Reduced for better performance
+MAX_ITER = 50  
 
 def generate_mandelbrot(width, height):
-    """Generate Mandelbrot Set using vectorized numpy operations."""
+    """Generate Mandelbrot Set - optimized for web deployment."""
     
-    # Use smaller initial generation
-    calc_width = min(width, 400)
-    calc_height = min(height, 400)
+    # smaller resolution for web builds, increase if local
+    calc_width = 200  
+    calc_height = 200
     
     # Create coordinate arrays
     zoom = 0.8
@@ -23,30 +23,23 @@ def generate_mandelbrot(width, height):
     Z = np.zeros_like(C)
     iterations = np.zeros(C.shape, dtype=int)
     
-    # Vectorized Mandelbrot calculation
+    # Vectorized Mandelbrot calculation with early exit
     for i in range(MAX_ITER):
         mask = np.abs(Z) <= 2
+        if not np.any(mask):  # Early exit - critical for performance
+            break
         Z[mask] = Z[mask]**2 + C[mask]
         iterations[mask] = i
         
-        # Early exit if no points are left to compute
-        if not np.any(mask):
-            break
     
-    # Create colormap
-    colormap = np.zeros((calc_height, calc_width, 3), dtype=np.uint8)
-    normalized = iterations.astype(np.float32) / MAX_ITER
-    
-    # Generate colors
-    colormap[..., 0] = (normalized * 255).astype(np.uint8)
-    colormap[..., 1] = ((normalized * 4) % 1 * 255).astype(np.uint8)
-    colormap[..., 2] = ((normalized * 8) % 1 * 255).astype(np.uint8)
+    # Simple grayscale colormap to avoid complex operations
+    normalized = (iterations.astype(np.float32) / MAX_ITER * 255).astype(np.uint8)
+    colormap = np.stack([normalized, normalized, normalized], axis=-1)
     
     # Convert to pygame surface
     surface = pygame.surfarray.make_surface(colormap.swapaxes(0, 1))
     
-    # Scale up if necessary
-    if calc_width != width or calc_height != height:
-        surface = pygame.transform.scale(surface, (width, height))
+    # Scale up to target size
+    surface = pygame.transform.scale(surface, (width, height))
     
     return surface

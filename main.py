@@ -8,7 +8,7 @@ from constants import *
 from ui import *
 
 async def main():   
-# Pygame initialization
+    # Pygame initialization
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Math is Beautiful")
@@ -27,12 +27,9 @@ async def main():
     current_page = 0
     mx, my = 0, 0
 
-    # Pregenerate Mandelbrot
-    mandelbrot_surface = generate_mandelbrot(WIDTH, HEIGHT)
-    
     # Cache julia sets to avoid recalc
     julia_cache = {}
-    last_julia_params = None
+    
 
     # Cache Perlin Noise
     last_perlin_params = None
@@ -41,7 +38,7 @@ async def main():
 
 ## Julia Set ##
     def juliaSet():
-        nonlocal julia_cache, last_julia_params
+        nonlocal julia_cache 
             
         # Set 
         zoom = 1.5
@@ -67,10 +64,23 @@ async def main():
         surface = pygame.surfarray.make_surface(colored_img)
         screen.blit(surface, (0, 0))
 
+    # Pregenerate Mandelbrot
+    mandelbrot_surface = None
+    mandrelbrot_generated = False
+
 ## Mandelbrot ##
-    def mandelbrot(): 
-        # Display Mandelbrot
-        screen.blit(mandelbrot_surface, (0, 0))
+    def mandelbrot():
+        nonlocal mandelbrot_surface, mandelbrot_generated
+        
+        # Generate only when first needed
+        if not mandelbrot_generated:
+            print("Generating Mandelbrot set...")
+            mandelbrot_surface = generate_mandelbrot(WIDTH, HEIGHT)
+            mandelbrot_generated = True
+            print("Mandelbrot set ready!")
+        
+        if mandelbrot_surface:
+            screen.blit(mandelbrot_surface, (0, 0))
 
 ## Perlin Noise ##
     def perlinNoise():
@@ -106,7 +116,7 @@ async def main():
     while running:
         frame_count += 1
         time_delta = pygame.time.Clock().tick(60) / 1000.0
-        screen.fill("Black") # Temp fill color 
+        screen.fill((0,0,0)) # Temp fill color 
 
 
         mx, my = pygame.mouse.get_pos()  # Get current mouse position
