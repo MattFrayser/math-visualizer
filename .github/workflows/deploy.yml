@@ -38,7 +38,7 @@ jobs:
     
     - name: Build for web
       run: |
-        pygbag --width 800 --height 800 --no_opt --html --template simple --title "Math Visualizer" .
+        pygbag --width 800 --height 800 --no_opt --html --template ./template.html --title "Math Visualizer" .
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
