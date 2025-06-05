@@ -32,7 +32,7 @@ jobs:
     
     - name: Build for web
       run: |
-        pygbag --width 800 --height 800 -no_opt --html .
+        pygbag --width 800 --height 800 --no_opt --html .
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
