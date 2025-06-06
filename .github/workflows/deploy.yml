@@ -21,13 +21,20 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Install dependencies
+    - name: Install system dependencies
       run: |
-        pip install pygame-ce==2.5.4 pygbag==0.9.2
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+    
+    - name: Install Python dependencies
+      run: |
+        pip install pygame-ce==2.5.4 pygbag==0.9.2 black
         pip install -r requirements.txt
     
     - name: Build with pygbag
-      run: python -m pygbag main.py
+      run: |
+        python -m pygbag --optimize --name "Math Visualizer" --width 800 --height 800 main.py
+      timeout-minutes: 10
     
     - name: Find and verify build files
       run: |
