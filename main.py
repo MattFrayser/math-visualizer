@@ -90,7 +90,7 @@ async def main():
             return
         
         # Limit cache size
-        if len(julia_cache) > 30:  # Reduced cache size
+        if len(julia_cache) > 60:  
             julia_cache.clear()
 
         # Compute Julia set at MUCH lower resolution for speed
@@ -164,7 +164,7 @@ async def main():
 
     while running:
         frame_count += 1
-        time_delta = pygame.time.Clock().tick(60) / 1000.0
+        time_delta = pygame.time.Clock().tick(30) / 1000.0
         screen.fill((0,0,0)) # Temp fill color 
 
 

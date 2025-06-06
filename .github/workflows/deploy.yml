@@ -17,14 +17,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 30  # Reduced from 120 - if it takes longer, there's likely an issue
     steps:
     - uses: actions/checkout@v4
     
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5  # Updated to v5
       with:
         python-version: '3.11'
+        cache: 'pip'  # Cache pip dependencies
     
     - name: Install system dependencies
       run: |
@@ -33,26 +34,57 @@ jobs:
     
     - name: Install Python dependencies
       run: |
+        # Install core dependencies first
+        pip install --upgrade pip
         pip install pygame-ce==2.5.4 pygbag==0.9.2 black
-        pip install -r requirements.txt
+        
+        # Install requirements with timeout and retry
+        pip install --timeout 300 --retries 3 -r requirements.txt
     
     - name: Configure WASM
       run: |
         mkdir -p ~/.config/pygbag
         echo '{"wasm_mimetype": "application/wasm"}' > ~/.config/pygbag/config.json
     
-    - name: Build for web
+    - name: Debug Python environment
       run: |
-        python -m pygbag .
+        echo "Python version:"
+        python --version
+        echo "Installed packages:"
+        pip list | grep -E "(pygame|pygbag|numpy)"
+        echo "Current directory contents:"
+        ls -la
+    
+    - name: Build for web with verbose output
+      run: |
+        echo "Starting pygbag build..."
+        python -m pygbag --verbose --debug . 2>&1 | tee build.log
+        echo "Build completed, checking output..."
+      timeout-minutes: 15  # Set specific timeout for build step
     
     - name: Verify build output
       run: |
         echo "Checking build output directory..."
-        ls -la ./build/web/
-        echo "Checking for main.wasm..."
-        test -f ./build/web/main.wasm
-        echo "Checking for index.html..."
-        test -f ./build/web/index.html
+        if [ -d "./dist" ]; then
+          echo "Found dist directory:"
+          ls -la ./dist/
+          BUILD_DIR="./dist"
+        elif [ -d "./build/web" ]; then
+          echo "Found build/web directory:"
+          ls -la ./build/web/
+          BUILD_DIR="./build/web"
+        else
+          echo "No standard build directory found. Checking all directories:"
+          find . -name "*.wasm" -o -name "index.html" | head -20
+          exit 1
+        fi
+        
+        # Check for required files
+        echo "Looking for main.wasm and index.html..."
+        find $BUILD_DIR -name "*.wasm" -o -name "index.html"
+        
+        # Set BUILD_DIR for next step
+        echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_ENV
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
@@ -60,7 +92,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: './build/web'
+        path: ${{ env.BUILD_DIR }}
 
   deploy:
     environment:
