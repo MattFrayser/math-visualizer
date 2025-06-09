@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy PyScript to GitHub Pages
 
 on:
   push:
@@ -13,52 +13,30 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
+    - name: Prepare PyScript deployment
       run: |
-        sudo apt-get update && sudo apt-get install -y ffmpeg
-        pip install pygame-ce==2.5.4 pygbag==0.9.2 black
-        pip install numpy pygame_gui python-i18n
-    
-    - name: Build with pygbag
-      run: |
-        timeout 600 python -m pygbag --build .
-    
-    - name: Check build output
-      run: |
-        echo "Contents of current directory:"
-        ls -la
-        echo "Contents of build directory:"
-        ls -la build/ || echo "No build directory"
-        echo "Looking for index.html:"
-        find . -name "index.html" -type f
-        echo "Contents of index.html (first 20 lines):"
-        head -20 build/index.html || head -20 index.html || echo "No index.html found"
+        # Create build directory
+        mkdir -p build
+        
+        # Copy all Python files and HTML
+        cp *.py build/
+        cp *.html build/
+        
+        # List what we're deploying
+        echo "=== Files being deployed ==="
+        ls -la build/
+        
+        echo "=== Contents of index.html ==="
+        cat build/index.html
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
-    
-    - name: Verify files before upload
-      run: |
-        echo "=== Verifying build output before upload ==="
-        if [ -d "./build" ]; then
-          echo "Build directory exists:"
-          ls -la ./build/
-          echo "Files to upload:"
-          find ./build -type f
-        else
-          echo "ERROR: Build directory does not exist!"
-          echo "Available directories:"
-          ls -la
-          exit 1
-        fi
     
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
