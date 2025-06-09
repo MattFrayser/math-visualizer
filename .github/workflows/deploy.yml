@@ -33,13 +33,42 @@ jobs:
       run: python -m pygbag --build main.py
       timeout-minutes: 10
     
+    - name: Find build output
+      run: |
+        echo "=== Current directory contents ==="
+        ls -la
+        
+        echo "=== Looking for HTML files ==="
+        find . -name "*.html" -type f
+        
+        echo "=== Looking for WASM files ==="
+        find . -name "*.wasm" -type f
+        
+        echo "=== Checking possible build directories ==="
+        for dir in dist build __pycache__ .; do
+          if [ -d "$dir" ] && [ "$(ls -A $dir 2>/dev/null)" ]; then
+            echo "Non-empty directory: $dir"
+            ls -la "$dir"
+            if [ -f "$dir/index.html" ]; then
+              echo "Found index.html in $dir - using this as build output"
+              echo "BUILD_PATH=$dir" >> $GITHUB_ENV
+              break
+            fi
+          fi
+        done
+        
+        if [ -z "$BUILD_PATH" ]; then
+          echo "ERROR: No index.html found anywhere!"
+          exit 1
+        fi
+    
     - name: Setup Pages
       uses: actions/configure-pages@v4
     
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: dist
+        path: ${{ env.BUILD_PATH }}
     
     - name: Deploy to GitHub Pages
       uses: actions/deploy-pages@v4
